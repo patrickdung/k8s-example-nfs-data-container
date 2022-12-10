@@ -3,7 +3,7 @@
 # Copyright (c) 2022 Patrick Dung
 
 ---
-name: Release using Go releaser
+name: Build release
 on:
   push:
     # branches:
@@ -75,6 +75,11 @@ jobs:
           echo "REMOTE_BRANCH_NAME=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_ENV
           echo "remote_branch_name=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_OUTPUT
 
+      - name: Checkout this repository (to get Dockerfile for building)
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -94,6 +99,26 @@ jobs:
           # GitHub
           username: ${{ github.actor }}
           password: ${{ secrets.PUBLISH_TOKEN }}
+
+      - name: Install Cosign GH action
+        uses: sigstore/cosign-installer@main
+        # with:
+        #  cosign-release: 'v1.4.1'
+
+      - name: Build and push to container registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            ##  ARCH=${{ env.TO_BE_FIXED }}
+            RELEASE_VERSION=${{ env.REMOTE_BRANCH_NAME }}
+            LABEL_IMAGE_URL=${{ env.ORIGINAL_SOURCECODE_URL }}
+            LABEL_IMAGE_SOURCE=https://github.com/${{ github.repository }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ needs.init-env.outputs.container_registry_base_uri }}:${{ env.REMOTE_BRANCH_NAME }}
 
       - name: "Get the digest of container (amd64)"
         id: get-container-digest-amd64
