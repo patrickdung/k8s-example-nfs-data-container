@@ -70,8 +70,8 @@ jobs:
       - name: Get branch name (tag) of latest release from official repo
         id: get-remote-branch-name
         run: |
-          curl -sL https://api.github.com/repos/patrickdung/k8s-example-nfs-data-container/releases | \
-            jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 > /tmp/nfs-data-latest-branch-name
+          curl -sL https://api.github.com/repos/patrickdung/k8s-example-nfs-data-container/tags | \
+            jq -r ".[].name" | grep -v rc | sort -r -V | head -n 1 > /tmp/nfs-data-latest-branch-name
           echo "REMOTE_BRANCH_NAME=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_ENV
           echo "remote_branch_name=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_OUTPUT
 
