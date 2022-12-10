@@ -44,6 +44,37 @@ jobs:
         run: |
           echo "container_registry_base_uri=$(echo $CONTAINER_REGISTRY/$(echo $CONTAINER_REPOSITORY | tr 'A-Z' 'a-z'))" >> $GITHUB_OUTPUT
 
+  build-docker-image:
+    needs: [init-env]
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      actions: none
+      checks: none
+      contents: read
+      deployments: none
+      issues: none
+      packages: write
+      pull-requests: none
+      repository-projects: none
+      # GH action/scanners for sarif reports
+      security-events: write
+      statuses: none
+      # id-token: 'read'
+    outputs:
+      remote_branch_name: ${{ steps.get-remote-branch-name.outputs.remote_branch_name }}
+      container_digest_amd64: ${{ steps.get-container-digest-amd64.outputs.container_digest }}
+      container_digest_arm64: ${{ steps.get-container-digest-arm64.outputs.container_digest }}
+    steps:
+      - name: Get branch name (tag) of latest release from official repo
+        id: get-remote-branch-name
+        run: |
+          curl -sL https://api.github.com/repos/patrickdung/k8s-example-nfs-data-container/releases | \
+            jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 > /tmp/nfs-data-latest-branch-name
+          echo "REMOTE_BRANCH_NAME=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_ENV
+          echo "remote_branch_name=$(cat /tmp/nfs-data-latest-branch-name)" >> $GITHUB_OUTPUT
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -89,7 +120,7 @@ jobs:
             "${{ needs.init-env.outputs.container_registry_base_uri }}:${{ env.REMOTE_BRANCH_NAME }}"
 
   build-sbom-and-scanning:
-    needs: [init-env, publish-with-crossbuild]
+    needs: [init-env, build-docker-image]
     name: Build SBOM and image scanning
     runs-on: ubuntu-latest
     continue-on-error: false
