@@ -42,7 +42,9 @@ function start()
 
     /usr/sbin/exportfs -r
     # -G 10 to reduce grace time to 10 seconds (the lowest allowed)
-    /usr/sbin/rpc.nfsd -G 10 -N 2 -V 3 -N 4 -N 4.1 2
+    # No more support of NFS v2
+    #/usr/sbin/rpc.nfsd -G 10 -N 2 -V 3 -N 4 -N 4.1 2
+    /usr/sbin/rpc.nfsd -G 10 -V 3 -N 4 -N 4.1 2
     /usr/sbin/rpc.statd --no-notify
     echo "NFS started"
 }
