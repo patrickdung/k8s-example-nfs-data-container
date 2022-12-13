@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#FROM docker.io/almalinux/9-minimal:9.1-20221117
-# Is microdnf in quay.io/almalinuxorg/almalinux:9.1?
-#FROM quay.io/almalinuxorg/almalinux:9.1
-#FROM quay.io/almalinux/almalinux:9.0-minimal
+##FROM docker.io/almalinux/9-minimal:9.1-20221117
+FROM quay.io/almalinuxorg/9-minimal:9
 
-RUN microdnf -y install /usr/bin/ps nfs-utils && \
-      microdnf -y upgrade && \
+RUN microdnf \
+      --nodocs --setopt="install_weak_deps=0" --setopt="keepcache=0" \
+      -y install /usr/bin/ps nfs-utils && \
+      microdnf \
+        --nodocs --setopt="install_weak_deps=0" --setopt="keepcache=0" \
+        -y upgrade && \
       microdnf clean all && \
       mkdir -p /exports
 ADD run_nfs.sh /usr/local/bin/
